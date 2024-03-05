@@ -1,0 +1,7 @@
+azure-cognitiveservices-speech
+python-dotenv
+geonamescache
+fastapi
+uvicorn
+jinja2
+requests
