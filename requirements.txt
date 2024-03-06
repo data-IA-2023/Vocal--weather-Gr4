@@ -1,2 +1,9 @@
 azure-cognitiveservices-speech
-python-dotenv 
+python-dotenv
+sounddevice
+numpy
+pyaudio
+scipy
+wavio
+spacy
+datapackage
