@@ -86,7 +86,7 @@ def search(city):
 
 ################## current weather #########################
 def currentweather(id):
-    querystring = {"tempunit":"C","lang":"fr"}
+    querystring = {"tempunit":"C","lang":"fr","tz":"Europe/Paris"}
     urlcurrent = f"https://foreca-weather.p.rapidapi.com/current/{id}"
     current = requests.get(urlcurrent, headers=headers, params=querystring)
     current_result = current.json()
@@ -116,15 +116,15 @@ def currentweather(id):
 
 ############## hourly weather ############################
 def hourlyWeather(id,hours):
-    querystring = {"tempunit":"C","lang":"fr","periods":str(hours)}
+    querystring = {"tempunit":"C","lang":"fr","tz":"Europe/Paris","periods":str(hours)}
     urlcurrent = f"https://foreca-weather.p.rapidapi.com/forecast/hourly/{id}"
     current = requests.get(urlcurrent, headers=headers, params=querystring)
     current_result = current.json()
-    #return print(current_result)
+    #return print(len(current_result))
 
 
  # Chaîne de temps fournie
-    temps_str = current_result['forecast'][hours-1]['time']
+    temps_str = current_result['forecast'][-1]['time']
 
 # Analyser la chaîne de temps en objet datetime avec prise en charge du fuseau horaire
     temps_obj = parser.isoparse(temps_str)
@@ -139,9 +139,9 @@ def hourlyWeather(id,hours):
     format_francais = "%d/%m/%Y %H:%M:%S"
     temps_formate = temps_obj.strftime(format_francais)
 
-    print(current_result['forecast'][hours-1]['time'])
+    print(current_result['forecast'][-1]['time'])
     print("Date et heure en français:", temps_formate)
-    print(str(current_result['forecast'][hours-1]['temperature'])+'°C')
+    print(str(current_result['forecast'][-1]['temperature'])+'°C')
 
 
 
@@ -149,7 +149,7 @@ def hourlyWeather(id,hours):
 
 ############## daily weather ############################
 def dailyWeather(id,days):
-    querystring = {"tempunit":"C","lang":"fr","periods":str(days)}
+    querystring = {"tempunit":"C","lang":"fr","tz":"Europe/Paris","periods":str(days)}
     urlcurrent = f"https://foreca-weather.p.rapidapi.com/forecast/daily/{id}"
     current = requests.get(urlcurrent, headers=headers, params=querystring)
     current_result = current.json()
@@ -169,14 +169,38 @@ def dailyWeather(id,days):
     temps_obj = temps_obj.astimezone(fuseau_horaire)
 
 # Formatage de la date et de l'heure en français
-    format_francais = "%d/%m/%Y %H:%M:%S"
+    format_francais = "%d/%m/%Y"
     temps_formate = temps_obj.strftime(format_francais)
 
-    print(current_result['forecast'][days-1]['date'])
+    print(current_result['forecast'][-1]['date'])
     print("Date et heure en français:", temps_formate)
-    print('température maximum :',str(current_result['forecast'][days-1]['maxTemp'])+'°C')
-    print('température minimum :',str(current_result['forecast'][days-1]['minTemp'])+'°C')
+    print('température maximum :',str(current_result['forecast'][-1]['maxTemp'])+'°C')
+    print('température minimum :',str(current_result['forecast'][-1]['minTemp'])+'°C')
 
+######################### weatherMatch ########################
+    
+def weatherMatch(id,data):
+    if data == 'demain':
+                    date = 2
+                    dailyWeather(id,date)
+
+    elif 'après' in data.lower() and 'demain' in data.lower():
+                    date = 3
+                    dailyWeather(id,date)
+
+
+    elif 'jour' in data.lower() or 'jours' in data.lower():
+                    resultats = re.findall(r'\b\d+\b', data)
+                    date = int(resultats[0]) + 1
+                    dailyWeather(id,date)
+
+    elif 'h' in data.lower() or 'heure' in data.lower() or 'heures' in data.lower():
+                    resultats = re.findall(r'\b\d+\b', data)
+                    date = int(resultats[0]) + 1 
+                    hourlyWeather(id,date)
+
+    elif data =="aujourd'hui" or data =='':
+                    currentweather(id)
 
 
 ##### Process text sample (from wikipedia)
@@ -191,9 +215,8 @@ print(test)
 idcity   = ''  # Initialiser idcity en dehors de la boucle
 locword  = ''
 dateword = ''
+
 if IsMeteo:
-
-
     for i in range(len(test)):
         if test[i]['entity_group'] == 'LOC':
             locword = test[i]['word']
@@ -203,72 +226,7 @@ if IsMeteo:
     print(locword)
     print(dateword)       
     idcity = search(locword)
-
-    match dateword:
-            case 'demain':
-                    date = 2
-                    dailyWeather(idcity,date)
-
-            case 'après-demain':
-                    date = 3
-                    dailyWeather(idcity,date)
-
-            case 'après demain':
-                    date = 3
-                    dailyWeather(idcity,date)
-
-            case 'jour':
-                    resultats = re.findall(r'\b\d+\b', dateword)
-                    date = int(resultats[0])
-                    dailyWeather(idcity,date)
-
-            case 'jours':
-                    resultats = re.findall(r'\b\d+\b', dateword)
-                    date = int(resultats[0])
-                    dailyWeather(idcity,date)
-
-            case 'h':
-                    resultats = re.findall(r'\b\d+\b', dateword)
-                    date = int(resultats[0])
-                    dailyWeather(idcity,date)
-
-            case 'heure':
-                    resultats = re.findall(r'\b\d+\b', dateword)
-                    date = int(resultats[0])
-                    dailyWeather(idcity,date)
-
-            case 'heures':
-                    resultats = re.findall(r'\b\d+\b', dateword)
-                    date = int(resultats[0])
-                    dailyWeather(idcity,date)
-
-            case '':
-                    currentweather(idcity)
-
-
-
-            
-
-    """if test[i]['word'].lower() == 'demain':
-                    date = 2
-                    dailyWeather(idcity,date)
-
-            elif 'après' in test[i]['word'].lower() and 'demain' in test[i]['word'].lower():
-                    date = 3
-                    dailyWeather(idcity,date)
-
-
-            elif 'jour' in test[i]['word'].lower() or 'jours' in test[i]['word'].lower():
-                    resultats = re.findall(r'\b\d+\b', test[i]['word'])
-                    date = int(resultats[0])
-                    dailyWeather(idcity,date)
-
-            else:
-                    resultats = re.findall(r'\b\d+\b', test[i]['word'])
-                    date = int(resultats[0])
-                    hourlyWeather(idcity,date)
-        else:
-            currentweather(idcity)"""
+    weatherMatch(idcity,dateword)
 else:
     print("vous n'avez pas demander la météo")
 
