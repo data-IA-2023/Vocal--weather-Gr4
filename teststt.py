@@ -4,11 +4,12 @@ from dotenv import load_dotenv
 from transformers import AutoTokenizer, AutoModelForTokenClassification
 from transformers import pipeline
 import requests
-from datetime import datetime
+from datetime import datetime, date
 from dateutil import parser
 import pytz
 import re
 import pyodbc
+import locale
 load_dotenv()
 
 
@@ -157,7 +158,7 @@ def dailyWeather(id,days):
 
 
  # Chaîne de temps fournie
-    temps_str = current_result['forecast'][days-1]['date']
+    temps_str = current_result['forecast'][-1]['date']
 
 # Analyser la chaîne de temps en objet datetime avec prise en charge du fuseau horaire
     temps_obj = parser.isoparse(temps_str)
@@ -177,40 +178,94 @@ def dailyWeather(id,days):
     print('température maximum :',str(current_result['forecast'][-1]['maxTemp'])+'°C')
     print('température minimum :',str(current_result['forecast'][-1]['minTemp'])+'°C')
 
+
+
+############## dat day weather ############################
+def datDayWeather(id,date):
+    querystring = {"tempunit":"C","lang":"fr","tz":"Europe/Paris","periods":"15"}
+    urlcurrent = f"https://foreca-weather.p.rapidapi.com/forecast/daily/{id}"
+    current = requests.get(urlcurrent, headers=headers, params=querystring)
+    current_result = current.json()
+    #return print(current_result)
+    for i in range(len(current_result['forecast'])):
+            if current_result['forecast'][i]['date'] == str(date):
+                # Chaîne de temps fournie
+                    temps_str = current_result['forecast'][i]['date']
+
+                # Analyser la chaîne de temps en objet datetime avec prise en charge du fuseau horaire
+                    temps_obj = parser.isoparse(temps_str)
+
+                # Définir le fuseau horaire
+                    fuseau_horaire = pytz.timezone('Europe/Paris')  # Fuseau horaire de la France
+
+                # Appliquer le fuseau horaire à l'objet datetime
+                    temps_obj = temps_obj.astimezone(fuseau_horaire)
+
+                # Formatage de la date et de l'heure en français
+                    format_francais = "%d/%m/%Y"
+                    temps_formate = temps_obj.strftime(format_francais)
+
+                    print(current_result['forecast'][i]['date'])
+                    print("Date et heure en français:", temps_formate)
+                    print('température maximum :',str(current_result['forecast'][i]['maxTemp'])+'°C')
+                    print('température minimum :',str(current_result['forecast'][i]['minTemp'])+'°C')
+
+
+
 ######################### weatherMatch ########################
     
 def weatherMatch(id,data):
     if data == 'demain':
-                    date = 2
-                    dailyWeather(id,date)
+                    dateWeather = 2
+                    dailyWeather(id,dateWeather)
 
     elif 'après' in data.lower() and 'demain' in data.lower():
-                    date = 3
-                    dailyWeather(id,date)
+                    dateWeather = 3
+                    dailyWeather(id,dateWeather)
 
 
     elif 'jour' in data.lower() or 'jours' in data.lower():
                     resultats = re.findall(r'\b\d+\b', data)
-                    date = int(resultats[0]) + 1
-                    dailyWeather(id,date)
+                    dateWeather = int(resultats[0]) + 1
+                    dailyWeather(id,dateWeather)
 
     elif 'h' in data.lower() or 'heure' in data.lower() or 'heures' in data.lower():
                     resultats = re.findall(r'\b\d+\b', data)
-                    date = int(resultats[0]) + 1 
-                    hourlyWeather(id,date)
+                    dateWeather = int(resultats[0]) + 1 
+                    hourlyWeather(id,dateWeather)
+
+    elif re.search(r'janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre', data):
+                    jour = re.findall(r'\b\d+\b', data)
+                    mois = re.findall(r'janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre', data)
+                    actualYear = datetime.today().year 
+                    dateWeather =f'{jour[0]} {mois[0]} {actualYear}'
+                    # Extraire le jour, le mois et l'année
+                    jour, mois_str, annee = dateWeather.split()
+
+                    # Convertir le mois en chiffre en utilisant le dictionnaire de correspondance
+                    mois = mois_fr.get(mois_str.lower())
+
+                    # Créer un objet datetime
+                    date_obj = date(int(annee), mois, int(jour))
+                    datDayWeather(id,date_obj)
 
     elif data =="aujourd'hui" or data =='':
                     currentweather(id)
 
 
 ##### Process text sample (from wikipedia)
+mois_fr = {
+    'janvier': 1, 'février': 2, 'mars': 3, 'avril': 4,
+    'mai': 5, 'juin': 6, 'juillet': 7, 'août': 8,
+    'septembre': 9, 'octobre': 10, 'novembre': 11, 'décembre': 12
+}       
 response = recognize_from_microphone()
 tokenizer = AutoTokenizer.from_pretrained("Jean-Baptiste/camembert-ner-with-dates")
 model = AutoModelForTokenClassification.from_pretrained("Jean-Baptiste/camembert-ner-with-dates")    
 
 nlp = pipeline('ner', model=model, tokenizer=tokenizer, aggregation_strategy="simple")
 test = nlp(response)
-IsMeteo = 'météo' in response.lower()
+IsMeteo = 'météo' in response.lower() or 'temps' in response.lower() or 'beau' in response.lower() or 'mauvais' in response.lower()
 print(test)
 idcity   = ''  # Initialiser idcity en dehors de la boucle
 locword  = ''
