@@ -8,9 +8,32 @@ from datetime import datetime
 from dateutil import parser
 import pytz
 import re
+import pyodbc
 load_dotenv()
 
 
+# Retrieve environment variables
+server   = os.environ.get('SERVER')
+database = os.environ.get('DATABASE')
+username = os.environ.get('ADMINUSER')
+password = os.environ.get('PASSWORD')
+
+# Print environment variables for debugging
+print(f"Server: {server}")
+print(f"Database: {database}")
+print(f"Username: {username}")
+
+# Construct connection string
+connectionString = f"DRIVER={{ODBC Driver 18 for SQL Server}};SERVER={server};DATABASE={database};UID={username};PWD={password}"
+
+
+# Connect to the database
+try:
+    conn = pyodbc.connect(connectionString)
+    print("Connected successfully!")
+    # Add your further code here
+except Exception as e:
+    print(f"Error connecting to the database: {e}")
 
 def recognize_from_microphone():
     # This example requires environment variables named "SPEECH_KEY" and "SPEECH_REGION"
@@ -35,11 +58,6 @@ def recognize_from_microphone():
             print("Error details: {}".format(cancellation_details.error_details))
             print("Did you set the speech resource key and region values?")
 
-
-
-response = recognize_from_microphone()
-tokenizer = AutoTokenizer.from_pretrained("Jean-Baptiste/camembert-ner-with-dates")
-model = AutoModelForTokenClassification.from_pretrained("Jean-Baptiste/camembert-ner-with-dates")
 
 headers = {
 	"X-RapidAPI-Key": os.environ.get('X-RapidAPI-Key'),
@@ -162,20 +180,76 @@ def dailyWeather(id,days):
 
 
 ##### Process text sample (from wikipedia)
+response = recognize_from_microphone()
+tokenizer = AutoTokenizer.from_pretrained("Jean-Baptiste/camembert-ner-with-dates")
+model = AutoModelForTokenClassification.from_pretrained("Jean-Baptiste/camembert-ner-with-dates")    
+
 nlp = pipeline('ner', model=model, tokenizer=tokenizer, aggregation_strategy="simple")
 test = nlp(response)
 IsMeteo = 'météo' in response.lower()
 print(test)
-idcity = ''  # Initialiser idcity en dehors de la boucle
+idcity   = ''  # Initialiser idcity en dehors de la boucle
+locword  = ''
+dateword = ''
 if IsMeteo:
+
+
     for i in range(len(test)):
         if test[i]['entity_group'] == 'LOC':
-            loc = test[i]['word']
-        
-    idcity = search(loc)
-    for i in range(len(test)):
+            locword = test[i]['word']
         if test[i]['entity_group'] == 'DATE':
-            if test[i]['word'].lower() == 'demain':
+             dateword = test[i]['word']
+
+    print(locword)
+    print(dateword)       
+    idcity = search(locword)
+
+    match dateword:
+            case 'demain':
+                    date = 2
+                    dailyWeather(idcity,date)
+
+            case 'après-demain':
+                    date = 3
+                    dailyWeather(idcity,date)
+
+            case 'après demain':
+                    date = 3
+                    dailyWeather(idcity,date)
+
+            case 'jour':
+                    resultats = re.findall(r'\b\d+\b', dateword)
+                    date = int(resultats[0])
+                    dailyWeather(idcity,date)
+
+            case 'jours':
+                    resultats = re.findall(r'\b\d+\b', dateword)
+                    date = int(resultats[0])
+                    dailyWeather(idcity,date)
+
+            case 'h':
+                    resultats = re.findall(r'\b\d+\b', dateword)
+                    date = int(resultats[0])
+                    dailyWeather(idcity,date)
+
+            case 'heure':
+                    resultats = re.findall(r'\b\d+\b', dateword)
+                    date = int(resultats[0])
+                    dailyWeather(idcity,date)
+
+            case 'heures':
+                    resultats = re.findall(r'\b\d+\b', dateword)
+                    date = int(resultats[0])
+                    dailyWeather(idcity,date)
+
+            case '':
+                    currentweather(idcity)
+
+
+
+            
+
+    """if test[i]['word'].lower() == 'demain':
                     date = 2
                     dailyWeather(idcity,date)
 
@@ -194,7 +268,7 @@ if IsMeteo:
                     date = int(resultats[0])
                     hourlyWeather(idcity,date)
         else:
-            currentweather(idcity)
+            currentweather(idcity)"""
 else:
     print("vous n'avez pas demander la météo")
 
