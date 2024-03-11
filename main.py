@@ -8,6 +8,7 @@ import pyaudio
 from scipy.io.wavfile import write
 import spacy
 import fr_core_news_sm
+from deepgram import Deepgram
 from regex import *
  
 
@@ -38,12 +39,10 @@ sd.wait()
 # file with the given sampling frequency
 write("temp/recording.wav", freq, recording)"""
 # result=stt(key,filename,language,region)
-result="Quelle sera le temps à Tours dans 17 heures et 30 minutes ?"
 
+result="Quel sera le temps à Tours demain ?"
 
-
-
-features=analyse_text(result)
+features=useful_information(result)
 
 
 print(features)
