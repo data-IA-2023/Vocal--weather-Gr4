@@ -200,8 +200,8 @@ def dailyWeather(id,days):
 # Formatage de la date et de l'heure en français
     format_francais = "%d/%m/%Y"
     temps_formate = temps_obj.strftime(format_francais)
-
-    return "Date et heure en français : " + temps_formate +'\nTempérature maximum : ' + str(current_result['forecast'][-1]['maxTemp'])+'°C\n' + 'Température minimum : ' + str(current_result['forecast'][-1]['minTemp'])+'°C'
+    resultat= "Date et heure en français : " + temps_formate +'\nTempérature maximum : ' + str(current_result['forecast'][-1]['maxTemp'])+'°C\n' + 'Température minimum : ' + str(current_result['forecast'][-1]['minTemp'])+'°C'
+    return resultat
     ######################### weatherMatch ########################
 
 def weatherMatch(id,data):
