@@ -109,6 +109,7 @@ def currentweather(id):
     format_francais = "%d/%m/%Y %H:%M:%S"
     temps_formate = temps_obj.strftime(format_francais)
 
+    print(current)
     print(current_result['current']['time'])
     print("Date et heure en français:", temps_formate)
     print(str(current_result['current']['temperature'])+'°C')
@@ -140,6 +141,7 @@ def hourlyWeather(id,hours):
     format_francais = "%d/%m/%Y %H:%M:%S"
     temps_formate = temps_obj.strftime(format_francais)
 
+    print(current)
     print(current_result['forecast'][-1]['time'])
     print("Date et heure en français:", temps_formate)
     print(str(current_result['forecast'][-1]['temperature'])+'°C')
@@ -150,11 +152,11 @@ def hourlyWeather(id,hours):
 
 ############## daily weather ############################
 def dailyWeather(id,days):
-    querystring = {"tempunit":"C","lang":"fr","tz":"Europe/Paris","periods":str(days)}
+    querystring = {"tempunit":"C","lang":"fr","tz":"Europe/Paris","periods":str(days), "dataset": 'full'}
     urlcurrent = f"https://foreca-weather.p.rapidapi.com/forecast/daily/{id}"
     current = requests.get(urlcurrent, headers=headers, params=querystring)
     current_result = current.json()
-    #return print(current_result)
+    return print(current_result)
 
 
  # Chaîne de temps fournie
@@ -173,6 +175,8 @@ def dailyWeather(id,days):
     format_francais = "%d/%m/%Y"
     temps_formate = temps_obj.strftime(format_francais)
 
+
+    print(current)
     print(current_result['forecast'][-1]['date'])
     print("Date et heure en français:", temps_formate)
     print('température maximum :',str(current_result['forecast'][-1]['maxTemp'])+'°C')
@@ -205,6 +209,8 @@ def datDayWeather(id,date):
                     format_francais = "%d/%m/%Y"
                     temps_formate = temps_obj.strftime(format_francais)
 
+
+                    print(current)
                     print(current_result['forecast'][i]['date'])
                     print("Date et heure en français:", temps_formate)
                     print('température maximum :',str(current_result['forecast'][i]['maxTemp'])+'°C')
