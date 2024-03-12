@@ -40,7 +40,7 @@ sd.wait()
 write("temp/recording.wav", freq, recording)"""
 # result=stt(key,filename,language,region)
 
-result="Quel sera le temps à Tours demain ?"
+result="Quel sera le temps à Tours le 20 mars ?"
 
 features=useful_information(result)
 
