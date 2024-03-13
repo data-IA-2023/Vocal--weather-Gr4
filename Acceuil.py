@@ -18,7 +18,7 @@ if 'uuid' not in st.session_state:
 st.title("Vocal weather")
 st.text("⛈️ vs ☀️")
 
-audio = audiorecorder("🎙️ Record", "🛑 Stop recording")
+audio = audiorecorder("🎙️ Enregistrez votre voix", "🛑 C'est bon !")
 
 if len(audio) > 0 :
     audiofile=f"temp/audio{st.session_state['uuid']}.wav"
@@ -27,3 +27,4 @@ if len(audio) > 0 :
     os.remove(audiofile)
     if result != None : st.text(result[2])
     else : st.text("Vous n'avez pas demandé la météo !")
+    st.text("La réponse vous semble-t-elle cohérente ?")

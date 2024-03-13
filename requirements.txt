@@ -14,4 +14,4 @@ sentencepiece
 torch
 streamlit
 streamlit-audiorecorder
-
+altair

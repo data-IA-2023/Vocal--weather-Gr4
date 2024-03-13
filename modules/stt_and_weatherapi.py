@@ -282,7 +282,7 @@ def add2db(weatherFinal):
     locword       = weatherFinal[3]
     locscore      = float(weatherFinal[4])
     dateword      = weatherFinal[5]
-    datescore     = weatherFinal[6]
+    datescore     = float(weatherFinal[6])
 
     print(end_stt)
 
