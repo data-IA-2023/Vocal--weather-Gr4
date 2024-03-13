@@ -44,3 +44,8 @@ chart = alt.Chart(df_date_mean).mark_bar().encode(
 )
 
 st.altair_chart(chart, use_container_width=True)
+
+
+satisfaction=len(df[df["feedback"]=="ok"]["feedback"])/len(df["feedback"])
+
+st.text(f"Satisfaction des utilisateurs : {round(satisfaction*100,1)} %")
