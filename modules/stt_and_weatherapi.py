@@ -268,8 +268,7 @@ def execute_cmd(audio):
         weather          = weatherMatch(idcity,dateword)
         weather_result   = "Lieu : " + locword + "\n" + weather[0]
         weather_request  = weather[1]
-        weatherFinal=(response,weather_request,weather_result,locword,locscore,dateword,datescore)
-        add2db(weatherFinal)
+        weatherFinal=(response,weather_request,weather_result,locword,locscore,dateword,datescore,feedback)
         return weatherFinal
     else:
         return None
@@ -282,7 +281,9 @@ def add2db(weatherFinal):
     locword       = weatherFinal[3]
     locscore      = float(weatherFinal[4])
     dateword      = weatherFinal[5]
-    datescore     = float(weatherFinal[6])
+    try : datescore = float(weatherFinal[6])
+    except : datescore = weatherFinal[6]
+    feedback      = weatherFinal[7]
 
     print(end_stt)
 
@@ -312,6 +313,6 @@ def add2db(weatherFinal):
         locscore,
         dateword,
         datescore,
-        "",
+        feedback,
     )
     conn.commit()

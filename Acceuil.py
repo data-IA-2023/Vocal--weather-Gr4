@@ -25,6 +25,19 @@ if len(audio) > 0 :
     audio.export(audiofile, format="wav")
     result=execute_cmd(audiofile)
     os.remove(audiofile)
-    if result != None : st.text(result[2])
-    else : st.text("Vous n'avez pas demandé la météo !")
-    st.text("La réponse vous semble-t-elle cohérente ?")
+    if result == None : st.text("Vous n'avez pas demandé la météo !")
+    else : 
+        st.text(result[2])
+        result=[e for e in result]
+        feedback=st.empty()
+        with feedback.container():
+            ok = st.button("C'est bon !", help="Le service a fonctionné correctement.", args=(), kwargs={"bg_color": "green", "color": "green", "padding": "10px"})
+            not_ok = st.button("Ca ne va pas !", help="Le service n'a pas fonctionné correctement.", args=(), kwargs={"bg_color": "red", "color": "red", "padding": "10px"})
+            if ok:
+                result[-1]="ok"
+                add2db(result)
+                feedback.empty()
+            if not_ok:
+                result[-1]="not ok"
+                add2db(result)
+                feedback.empty()

@@ -15,9 +15,6 @@ st.set_page_config(
     page_icon="☁️",
 )
 
-if 'uuid' not in st.session_state:
-    st.session_state['uuid']= str(uuid.uuid4())
-
 st.title("Statistiques")
 buf = io.StringIO()
 df=read_db()
