@@ -1,6 +1,5 @@
-import os
+from connect2db import *
 import azure.cognitiveservices.speech as speechsdk
-from dotenv import load_dotenv 
 from transformers import AutoTokenizer, AutoModelForTokenClassification
 from transformers import pipeline
 import requests
@@ -8,36 +7,17 @@ from datetime import datetime, date
 from dateutil import parser
 import pytz
 import re
-import pyodbc
 #import sounddevice as sd
-import wave
+#import wave
 #import pyaudio
 #from scipy.io.wavfile import write
-load_dotenv()
+
+headers = {
+	"X-RapidAPI-Key": os.environ.get('X-RapidAPI-Key'),
+	"X-RapidAPI-Host": os.environ.get('X-RapidAPI-Host')
+    }
 
 
-# Retrieve environment variables
-server   = os.environ.get('SERVER')
-database = os.environ.get('DATABASE')
-username = os.environ.get('ADMINUSER')
-password = os.environ.get('PASSWORD')
-
-# Print environment variables for debugging
-print(f"Server: {server}")
-print(f"Database: {database}")
-print(f"Username: {username}")
-
-# Construct connection string
-connectionString = f"DRIVER={{ODBC Driver 18 for SQL Server}};SERVER={server};DATABASE={database};UID={username};PWD={password}"
-
-
-# Connect to the database
-try:
-    conn = pyodbc.connect(connectionString)
-    print("Connected successfully!")
-    # Add your further code here
-except Exception as e:
-    print(f"Error connecting to the database: {e}")
 
 def recognize_from_microphone(audio):
     speech_config = speechsdk.SpeechConfig(subscription=os.environ.get('SPEECH_KEY'), region=os.environ.get('SPEECH_REGION'))
@@ -60,12 +40,6 @@ def recognize_from_microphone(audio):
         if cancellation_details.reason == speechsdk.CancellationReason.Error:
             print("Error details: {}".format(cancellation_details.error_details))
             print("Did you set the speech resource key and region values?")
-
-
-headers = {
-	"X-RapidAPI-Key": os.environ.get('X-RapidAPI-Key'),
-	"X-RapidAPI-Host": os.environ.get('X-RapidAPI-Host')
-    }
 
 
 

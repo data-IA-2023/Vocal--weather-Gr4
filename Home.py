@@ -3,7 +3,7 @@ import sys
 sys.path.append('modules')
 from audiorecorder import audiorecorder
 import uuid
-from stt2 import *
+from stt_and_weatherapi import *
 import os
 
 
