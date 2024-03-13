@@ -9,10 +9,10 @@ from dateutil import parser
 import pytz
 import re
 import pyodbc
-import sounddevice as sd
+#import sounddevice as sd
 import wave
-import pyaudio
-from scipy.io.wavfile import write
+#import pyaudio
+#from scipy.io.wavfile import write
 load_dotenv()
 
 
@@ -89,7 +89,7 @@ def search(city):
 
 ################## current weather #########################
 def currentweather(id):
-    querystring = {"tempunit":"C","lang":"fr","tz":"Europe/Paris"}
+    querystring = {"tempunit":"C","lang":"fr","tz":"Europe/Paris","dataset": 'full'}
     urlcurrent = f"https://foreca-weather.p.rapidapi.com/current/{id}"
     current = requests.get(urlcurrent, headers=headers, params=querystring)
     current_result = current.json()
@@ -111,14 +111,16 @@ def currentweather(id):
     format_francais = "%d/%m/%Y %H:%M:%S"
     temps_formate = temps_obj.strftime(format_francais)
 
-    return "Date et heure en français : " + temps_formate +'\nTempérature : ' + str(current_result['current']['temperature'])+'°C'
+
+    result = "Date et heure en français : " + temps_formate +'\nTempérature : ' + str(current_result['current']['temperature'])+'°C'+'\nProbabilité de pluie : ' + str(current_result['current']['precipProb'])+' %' +'\nVitesse du vent : ' + str(current_result['current']['windSpeed'])+' m/s'+'\nPrésence nuageuse : ' + str(current_result['current']['cloudiness'])+' %'  
+    return result, current
 
 
 
 
 ############## hourly weather ############################
 def hourlyWeather(id,hours):
-    querystring = {"tempunit":"C","lang":"fr","tz":"Europe/Paris","periods":str(hours)}
+    querystring = {"tempunit":"C","lang":"fr","tz":"Europe/Paris","periods":str(hours),"dataset": 'full'}
     urlcurrent = f"https://foreca-weather.p.rapidapi.com/forecast/hourly/{id}"
     current = requests.get(urlcurrent, headers=headers, params=querystring)
     current_result = current.json()
@@ -143,10 +145,13 @@ def hourlyWeather(id,hours):
 
     print("Date et heure en français:", temps_formate)
     print(str(current_result['forecast'][-1]['temperature'])+'°C')
-    return current_result['forecast'][-1]['time']
 
+    result = "Date et heure en français : " + temps_formate +'\nTempérature : ' + str(current_result['current']['temperature'])+'°C'+'\nProbabilité de pluie : ' + str(current_result['current']['precipProb'])+' %' +'\nVitesse du vent : ' + str(current_result['current']['windSpeed'])+' m/s'+'\nPrésence nuageuse : ' + str(current_result['current']['cloudiness'])+' %'
+    return result, current
+
+################# dat day weather ########################
 def datDayWeather(id,date):
-    querystring = {"tempunit":"C","lang":"fr","tz":"Europe/Paris","periods":"15"}
+    querystring = {"tempunit":"C","lang":"fr","tz":"Europe/Paris","periods":"15","dataset": 'full'}
     urlcurrent = f"https://foreca-weather.p.rapidapi.com/forecast/daily/{id}"
     current = requests.get(urlcurrent, headers=headers, params=querystring)
     current_result = current.json()
@@ -169,7 +174,8 @@ def datDayWeather(id,date):
                     format_francais = "%d/%m/%Y"
                     temps_formate = temps_obj.strftime(format_francais)
 
-                    return "Date et heure en français : " + temps_formate +'\nTempérature maximum : ' + str(current_result['forecast'][-1]['maxTemp'])+'°C\n' + 'Température minimum : ' + str(current_result['forecast'][-1]['minTemp'])+'°C'
+                    result = "Date et heure en français : " + temps_formate +'\nTempérature maximum : ' + str(current_result['forecast'][i]['maxTemp'])+'°C\n' + 'Température minimum : ' + str(current_result['forecast'][i]['minTemp'])+'°C' +'\nProbabilité de pluie : ' + str(current_result['forecast'][i]['precipProb'])+' %' +'\nVitesse du vent : ' + str(current_result['forecast'][i]['maxWindSpeed'])+' m/s'+'\nPrésence nuageuse : ' + str(current_result['forecast'][i]['cloudiness'])+' %' 
+                    return result, current
 
 
 
@@ -178,7 +184,7 @@ def datDayWeather(id,date):
 
     ############## daily weather ############################
 def dailyWeather(id,days):
-    querystring = {"tempunit":"C","lang":"fr","tz":"Europe/Paris","periods":str(days)}
+    querystring = {"tempunit":"C","lang":"fr","tz":"Europe/Paris","periods":str(days),"dataset": 'full'}
     urlcurrent = f"https://foreca-weather.p.rapidapi.com/forecast/daily/{id}"
     current = requests.get(urlcurrent, headers=headers, params=querystring)
     current_result = current.json()
@@ -200,30 +206,35 @@ def dailyWeather(id,days):
 # Formatage de la date et de l'heure en français
     format_francais = "%d/%m/%Y"
     temps_formate = temps_obj.strftime(format_francais)
-    resultat= "Date et heure en français : " + temps_formate +'\nTempérature maximum : ' + str(current_result['forecast'][-1]['maxTemp'])+'°C\n' + 'Température minimum : ' + str(current_result['forecast'][-1]['minTemp'])+'°C'
-    return resultat
+
+    result = "Date et heure en français : " + temps_formate +'\nTempérature maximum : ' + str(current_result['forecast'][-1]['maxTemp'])+'°C\n' + 'Température minimum : ' + str(current_result['forecast'][-1]['minTemp'])+'°C' +'\nProbabilité de pluie : ' + str(current_result['forecast'][-1]['precipProb'])+' %' +'\nVitesse du vent : ' + str(current_result['forecast'][-1]['maxWindSpeed'])+' m/s'+'\nPrésence nuageuse : ' + str(current_result['forecast'][-1]['cloudiness'])+' %'
+    return result, current 
     ######################### weatherMatch ########################
 
 def weatherMatch(id,data):
     global mois_fr
     if re.search(r'demain', data.lower()):
                     dateWeather = 2
-                    return dailyWeather(id,dateWeather)
+                    weather = dailyWeather(id,dateWeather)
+                    return weather
 
-    elif 'après' in data.lower() and 'demain' in data.lower():
+    elif re.search(r'après(-| )demain', data.lower()):
                     dateWeather = 3
-                    return dailyWeather(id,dateWeather)
+                    weather = dailyWeather(id,dateWeather)
+                    return weather
 
 
     elif 'jour' in data.lower() or 'jours' in data.lower():
                     resultats = re.findall(r'\b\d+\b', data)
                     dateWeather = int(resultats[0]) + 1
-                    return dailyWeather(id,dateWeather)
+                    weather = dailyWeather(id,dateWeather)
+                    return weather
 
     elif 'h' in data.lower() or 'heure' in data.lower() or 'heures' in data.lower():
-                    resultats = re.findall(r'\b\d+\b', data)
+                    resultats   = re.findall(r'\b\d+\b', data)
                     dateWeather = int(resultats[0]) + 1 
-                    return hourlyWeather(id,dateWeather)
+                    weather = hourlyWeather(id,dateWeather)
+                    return weather
 
     elif re.search(r'janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre', data):
                     jour = re.findall(r'\b\d+\b', data)
@@ -238,10 +249,12 @@ def weatherMatch(id,data):
 
                     # Créer un objet datetime
                     date_obj = date(int(annee), mois, int(jour))
-                    return datDayWeather(id,date_obj)
+                    weather  = datDayWeather(id,date_obj)
+                    return weather
 
     elif data =="aujourd'hui" or data =='':
-                    return currentweather(id)
+                    weather = currentweather(id)
+                    return weather
 
 
 mois_fr = {
@@ -259,22 +272,72 @@ def execute_cmd(audio):
     model = AutoModelForTokenClassification.from_pretrained("Jean-Baptiste/camembert-ner-with-dates")    
 
     nlp = pipeline('ner', model=model, tokenizer=tokenizer, aggregation_strategy="simple")
-    test = nlp(response)
-    IsMeteo = 'météo' in response.lower() or 'temps' in response.lower() or 'beau' in response.lower() or 'mauvais' in response.lower()
-    print(test)
-    idcity   = ''  # Initialiser idcity en dehors de la boucle
-    locword  = ''
-    dateword = ''
-
+    camembert = nlp(response)
+    IsMeteo   = 'météo' in response.lower() or 'temps' in response.lower() or 'beau' in response.lower() or 'mauvais' in response.lower()
+    print(camembert)
+    idcity       = ''  # Initialiser idcity en dehors de la boucle
+    locword      = ''
+    dateword     = ''
+    feedbackFlag = 0
+    feedback     = ''
+    datescore    = ''
     if IsMeteo:
-        for i in range(len(test)):
-            if test[i]['entity_group'] == 'LOC':
-                locword = test[i]['word']
-            if test[i]['entity_group'] == 'DATE':
-                dateword = test[i]['word']
+        for i in range(len(camembert)):
+            if camembert[i]['entity_group'] == 'LOC':
+                locword  = camembert[i]['word']
+                locscore = camembert[i]['score']
+            if camembert[i]['entity_group'] == 'DATE':
+                dateword = camembert[i]['word']
+                datescore = camembert[i]['score']
 
         idcity = search(locword)
-        return "Lieu : " + locword + "\n" + weatherMatch(idcity,dateword)
+        weather          = weatherMatch(idcity,dateword)
+        weather_result   = "Lieu : " + locword + "\n" + weather[0]
+        weather_request  = weather[1]
+        weatherFinal=(response,weather_request,weather_result,locword,locscore,dateword,datescore)
+        add2db(weatherFinal)
+        return weatherFinal
     else:
-        return "Vous n'avez pas demandé la météo !"
+        return None
+    
+def add2db(weatherFinal):
+    global conn
+    start_stt     = weatherFinal[0]
+    entry_request = weatherFinal[1].status_code
+    end_stt       = weatherFinal[2]
+    locword       = weatherFinal[3]
+    locscore      = float(weatherFinal[4])
+    dateword      = weatherFinal[5]
+    datescore     = weatherFinal[6]
 
+    print(end_stt)
+
+
+    SQL_STATEMENT = """
+    INSERT gr4.vocal_weather (
+    timestamp, 
+    status, 
+    entrée_stt, 
+    sortie_stt, 
+    nlp_loc,
+    score_loc,
+    nlp_date,
+    score_date,
+    feedback
+    ) OUTPUT INSERTED.id
+    VALUES (CURRENT_TIMESTAMP, ?, ?, ?, ?, ?, ?, ?, ?)
+    """
+
+    cursor = conn.cursor()
+    cursor.execute(
+        SQL_STATEMENT,
+        entry_request,
+        start_stt,
+        end_stt.replace('\n',' '),
+        locword,
+        locscore,
+        dateword,
+        datescore,
+        "",
+    )
+    conn.commit()
