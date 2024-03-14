@@ -1,0 +1,17 @@
+python-dotenv
+sounddevice
+numpy
+scipy
+wavio
+datapackage
+annotated-types
+azure-cognitiveservices-speech
+transformers
+pytz
+pyodbc
+sentencepiece
+torch
+streamlit
+streamlit-audiorecorder
+altair
+opencage

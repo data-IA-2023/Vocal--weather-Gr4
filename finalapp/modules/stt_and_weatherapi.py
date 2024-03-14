@@ -1,6 +1,5 @@
-import os
+from connect2db import *
 import azure.cognitiveservices.speech as speechsdk
-from dotenv import load_dotenv 
 from transformers import AutoTokenizer, AutoModelForTokenClassification
 from transformers import pipeline
 import requests
@@ -8,42 +7,23 @@ from datetime import datetime, date
 from dateutil import parser
 import pytz
 import re
-import pyodbc
 #import sounddevice as sd
-import wave
+#import wave
 #import pyaudio
 #from scipy.io.wavfile import write
-load_dotenv()
+
+headers = {
+	"X-RapidAPI-Key": os.environ.get('X-RapidAPI-Key'),
+	"X-RapidAPI-Host": os.environ.get('X-RapidAPI-Host')
+    }
 
 
-# Retrieve environment variables
-server   = os.environ.get('SERVER')
-database = os.environ.get('DATABASE')
-username = os.environ.get('ADMINUSER')
-password = os.environ.get('PASSWORD')
 
-# Print environment variables for debugging
-print(f"Server: {server}")
-print(f"Database: {database}")
-print(f"Username: {username}")
-
-# Construct connection string
-connectionString = f"DRIVER={{ODBC Driver 18 for SQL Server}};SERVER={server};DATABASE={database};UID={username};PWD={password}"
-
-
-# Connect to the database
-try:
-    conn = pyodbc.connect(connectionString)
-    print("Connected successfully!")
-    # Add your further code here
-except Exception as e:
-    print(f"Error connecting to the database: {e}")
-
-def recognize_from_microphone():
+def recognize_from_microphone(audio):
     speech_config = speechsdk.SpeechConfig(subscription=os.environ.get('SPEECH_KEY'), region=os.environ.get('SPEECH_REGION'))
     speech_config.speech_recognition_language=os.environ.get('SPEECH_LANG')
 
-    audio_config = speechsdk.audio.AudioConfig(use_default_microphone= True)
+    audio_config = speechsdk.audio.AudioConfig(filename=audio)
     speech_recognizer = speechsdk.SpeechRecognizer(speech_config=speech_config, audio_config=audio_config)
 
     print("Speak into your microphone.")
@@ -60,12 +40,6 @@ def recognize_from_microphone():
         if cancellation_details.reason == speechsdk.CancellationReason.Error:
             print("Error details: {}".format(cancellation_details.error_details))
             print("Did you set the speech resource key and region values?")
-
-
-headers = {
-	"X-RapidAPI-Key": os.environ.get('X-RapidAPI-Key'),
-	"X-RapidAPI-Host": os.environ.get('X-RapidAPI-Host')
-    }
 
 
 
@@ -124,7 +98,7 @@ def hourlyWeather(id,hours):
     urlcurrent = f"https://foreca-weather.p.rapidapi.com/forecast/hourly/{id}"
     current = requests.get(urlcurrent, headers=headers, params=querystring)
     current_result = current.json()
-    #return print(current_result)
+    #return print(len(current_result))
 
 
     # Chaîne de temps fournie
@@ -187,7 +161,6 @@ def datDayWeather(id,date):
 
 
 
-
     ############## daily weather ############################
 def dailyWeather(id,days):
     querystring = {"tempunit":"C","lang":"fr","tz":"Europe/Paris","periods":str(days),"dataset": 'full'}
@@ -195,7 +168,6 @@ def dailyWeather(id,days):
     current = requests.get(urlcurrent, headers=headers, params=querystring)
     current_result = current.json()
     #return print(current_result)
-
 
  # Chaîne de temps fournie
     temps_str = current_result['forecast'][-1]['date']
@@ -277,24 +249,26 @@ mois_fr = {
 
 
 ##### Process text sample (from wikipedia)
-def execute_cmd():
-    global mois_fr   
-    idcity           = ''  # Initialiser idcity en dehors de la boucle
-    locword          = ''
-    dateword         = ''
-    response  = recognize_from_microphone()
-    IsMeteo   = 'météo' in response.lower() or 'temps' in response.lower() or 'beau' in response.lower() or 'mauvais' in response.lower()
+def execute_cmd(audio):
+    global mois_fr      
+    response = recognize_from_microphone(audio)
     tokenizer = AutoTokenizer.from_pretrained("Jean-Baptiste/camembert-ner-with-dates")
-    model     = AutoModelForTokenClassification.from_pretrained("Jean-Baptiste/camembert-ner-with-dates")    
-    nlp       = pipeline('ner', model=model, tokenizer=tokenizer, aggregation_strategy="simple")
+    model = AutoModelForTokenClassification.from_pretrained("Jean-Baptiste/camembert-ner-with-dates")    
+
+    nlp = pipeline('ner', model=model, tokenizer=tokenizer, aggregation_strategy="simple")
     camembert = nlp(response)
+    IsMeteo   = 'météo' in response.lower() or 'temps' in response.lower() or 'beau' in response.lower() or 'mauvais' in response.lower()
     print(camembert)
+    idcity       = ''  # Initialiser idcity en dehors de la boucle
+    locword      = ''
+    dateword     = ''
+    feedback     = ''
+    datescore    = ''
     if IsMeteo:
         for i in range(len(camembert)):
             if camembert[i]['entity_group'] == 'LOC':
                 locword  = camembert[i]['word']
                 locscore = camembert[i]['score']
-
             if camembert[i]['entity_group'] == 'DATE':
                 dateword = camembert[i]['word']
                 datescore = camembert[i]['score']
@@ -304,39 +278,9 @@ def execute_cmd():
             weather          = weatherMatch(idcity,dateword)
             weather_result   = "Lieu : " + locword + "\n" + weather[0]
             weather_request  = weather[1]
-            return response,weather_request,weather_result,locword,locscore,dateword,datescore
+            weatherFinal=(response,weather_request,weather_result,locword,locscore,dateword,datescore,feedback)
+            return weatherFinal
         else : 
             raise Exception("je n'ai pas compris votre demande veuillez réessayer")
     else:
-        return "Vous n'avez pas demandé la météo !"
-    
-
-weatherFinal = execute_cmd()
-
-start_stt     = weatherFinal[0]
-entry_request = weatherFinal[1]
-end_stt       = weatherFinal[2]
-locword       = weatherFinal[3]
-locscore      = weatherFinal[4]
-dateword      = weatherFinal[5]
-datescore     = weatherFinal[5]
-
-print(end_stt)
-
-if end_stt:
-       feedback = (input("c'est bon?"))
-       print(feedback)
-
-"""
-
-cursor = conn.cursor()
-cursor.execute(
-    SQL_STATEMENT,
-    entry_request,
-    start_stt,
-    end_stt.str.replace('\n',' '),
-    locword,
-    locscore,
-    dateword,
-    datescore,
-)"""
+        return None
