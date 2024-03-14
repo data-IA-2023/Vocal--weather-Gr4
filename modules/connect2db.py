@@ -22,9 +22,13 @@ connectionString = f"DRIVER={{ODBC Driver 18 for SQL Server}};SERVER={server};DA
 
 
 # Connect to the database
-try:
-    conn = pyodbc.connect(connectionString)
-    print("Connected successfully!")
-    # Add your further code here
-except Exception as e:
-    print(f"Error connecting to the database: {e}")
+def connect2db():
+    global conn,connectionString
+    try:
+        conn = pyodbc.connect(connectionString)
+        print("Connected successfully!")
+        # Add your further code here
+    except Exception as e:
+        print(f"Error connecting to the database: {e}")
+
+connect2db()

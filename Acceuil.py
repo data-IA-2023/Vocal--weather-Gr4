@@ -4,6 +4,7 @@ sys.path.append('modules')
 from audiorecorder import audiorecorder
 import uuid
 from stt_and_weatherapi import *
+from add2db import *
 import os
 
 
