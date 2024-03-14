@@ -20,6 +20,7 @@ headers = {
 
 
 def recognize_from_microphone(audio):
+    """This function takes an audio file path, sends it to microsoft azure speech services for analysis and returns the recognized text as a string."""
     speech_config = speechsdk.SpeechConfig(subscription=os.environ.get('SPEECH_KEY'), region=os.environ.get('SPEECH_REGION'))
     speech_config.speech_recognition_language=os.environ.get('SPEECH_LANG')
 
@@ -45,6 +46,7 @@ def recognize_from_microphone(audio):
 
 ############## search city ##################################
 def search(city):
+    """This functions takes the name of a city and returns its id."""
     urlsearch = f"https://foreca-weather.p.rapidapi.com/location/search/{city}"
 
     querysearch = {"lang":"fr"}
