@@ -1,7 +1,6 @@
 python-dotenv
 sounddevice
 numpy
-pyaudio
 scipy
 wavio
 datapackage
@@ -15,3 +14,4 @@ torch
 streamlit
 streamlit-audiorecorder
 altair
+opencage

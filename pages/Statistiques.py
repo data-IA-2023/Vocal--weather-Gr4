@@ -5,6 +5,7 @@ import sys
 sys.path.append('modules')
 from stt_and_weatherapi import *
 from read_db import *
+from geocoding import *
 import os
 import io
 import altair as alt
@@ -49,3 +50,14 @@ st.altair_chart(chart, use_container_width=True)
 satisfaction=len(df[df["feedback"]=="ok"]["feedback"])/len(df["feedback"])
 
 st.text(f"Satisfaction des utilisateurs : {round(satisfaction*100,1)} %")
+
+geoclist = []
+
+for city in df["nlp_loc"]:
+    geoclist.append(geocode_city(city))
+
+df_map=pd.DataFrame(geoclist,columns=['lat', 'lon'])
+
+st.text("Répartion des lieux demandés : ")
+
+st.map(df_map)
