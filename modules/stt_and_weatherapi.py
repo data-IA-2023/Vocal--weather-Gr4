@@ -120,11 +120,12 @@ def hourlyWeather(id,hours):
     print("Date et heure en français:", temps_formate)
     print(str(current_result['forecast'][-1]['temperature'])+'°C')
 
-    result = "Date et heure en français : " + temps_formate +'\nTempérature : ' + str(current_result['current']['temperature'])+'°C'+'\nProbabilité de pluie : ' + str(current_result['current']['precipProb'])+' %' +'\nVitesse du vent : ' + str(current_result['current']['windSpeed'])+' m/s'+'\nPrésence nuageuse : ' + str(current_result['current']['cloudiness'])+' %'
+    result = "Date et heure en français : " + temps_formate +'\nTempérature : ' + str(current_result['forecast'][-1]['temperature'])+'°C'+'\nProbabilité de pluie : ' + str(current_result['forecast'][-1]['precipProb'])+' %' +'\nVitesse du vent : ' + str(current_result['forecast'][-1]['windSpeed'])+' m/s'+'\nPrésence nuageuse : ' + str(current_result['forecast'][-1]['cloudiness'])+' %'
     return result, current
 
 ################# dat day weather ########################
 def datDayWeather(id,date):
+    match = False
     querystring = {"tempunit":"C","lang":"fr","tz":"Europe/Paris","periods":"15","dataset": 'full'}
     urlcurrent = f"https://foreca-weather.p.rapidapi.com/forecast/daily/{id}"
     current = requests.get(urlcurrent, headers=headers, params=querystring)
@@ -132,8 +133,11 @@ def datDayWeather(id,date):
     #return print(current_result)
     for i in range(len(current_result['forecast'])):
             if current_result['forecast'][i]['date'] == str(date):
+                    datday = current_result['forecast'][i]
+                    match = True
+    if match == True : 
                 # Chaîne de temps fournie
-                    temps_str = current_result['forecast'][i]['date']
+                    temps_str = datday['date']
 
                 # Analyser la chaîne de temps en objet datetime avec prise en charge du fuseau horaire
                     temps_obj = parser.isoparse(temps_str)
@@ -148,9 +152,10 @@ def datDayWeather(id,date):
                     format_francais = "%d/%m/%Y"
                     temps_formate = temps_obj.strftime(format_francais)
 
-                    result = "Date et heure en français : " + temps_formate +'\nTempérature maximum : ' + str(current_result['forecast'][i]['maxTemp'])+'°C\n' + 'Température minimum : ' + str(current_result['forecast'][i]['minTemp'])+'°C' +'\nProbabilité de pluie : ' + str(current_result['forecast'][i]['precipProb'])+' %' +'\nVitesse du vent : ' + str(current_result['forecast'][i]['maxWindSpeed'])+' m/s'+'\nPrésence nuageuse : ' + str(current_result['forecast'][i]['cloudiness'])+' %' 
+                    result = "Date et heure en français : " + temps_formate +'\nTempérature maximum : ' + str(datday['maxTemp'])+'°C\n' + 'Température minimum : ' + str(datday['minTemp'])+'°C' +'\nProbabilité de pluie : ' + str(datday['precipProb'])+' %' +'\nVitesse du vent : ' + str(datday['maxWindSpeed'])+' m/s'+'\nPrésence nuageuse : ' + str(datday['cloudiness'])+' %'
                     return result, current
-
+    else : 
+                    raise Exception ("je n'ai pas compris votre demande veuillez réessayer")
 
 
 
@@ -200,14 +205,20 @@ def weatherMatch(id,data):
     elif 'jour' in data.lower() or 'jours' in data.lower():
                     resultats = re.findall(r'\b\d+\b', data)
                     dateWeather = int(resultats[0]) + 1
-                    weather = dailyWeather(id,dateWeather)
-                    return weather
+                    if dateWeather > 15 :
+                            raise Exception("je n'ai pas compris votre demande veuillez réessayer")
+                    else : 
+                        weather = dailyWeather(id,dateWeather)
+                        return weather
 
     elif 'h' in data.lower() or 'heure' in data.lower() or 'heures' in data.lower():
                     resultats   = re.findall(r'\b\d+\b', data)
-                    dateWeather = int(resultats[0]) + 1 
-                    weather = hourlyWeather(id,dateWeather)
-                    return weather
+                    dateWeather = int(resultats[0]) + 1
+                    if dateWeather > 169:
+                        raise Exception("je n'ai pas compris votre demande veuillez réessayer")
+                    else : 
+                        weather = hourlyWeather(id,dateWeather)
+                        return weather
 
     elif re.search(r'janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre', data):
                     jour = re.findall(r'\b\d+\b', data)
@@ -239,7 +250,6 @@ mois_fr = {
 
 ##### Process text sample (from wikipedia)
 def execute_cmd(audio):
-    """executes all the commands to do the stt and extract the features, returns a tuple with all the disired weather information"""
     global mois_fr      
     response = recognize_from_microphone(audio)
     tokenizer = AutoTokenizer.from_pretrained("Jean-Baptiste/camembert-ner-with-dates")
@@ -252,7 +262,6 @@ def execute_cmd(audio):
     idcity       = ''  # Initialiser idcity en dehors de la boucle
     locword      = ''
     dateword     = ''
-    feedbackFlag = 0
     feedback     = ''
     datescore    = ''
     if IsMeteo:
@@ -264,11 +273,14 @@ def execute_cmd(audio):
                 dateword = camembert[i]['word']
                 datescore = camembert[i]['score']
 
-        idcity = search(locword)
-        weather          = weatherMatch(idcity,dateword)
-        weather_result   = "Lieu : " + locword + "\n" + weather[0]
-        weather_request  = weather[1]
-        weatherFinal=(response,weather_request,weather_result,locword,locscore,dateword,datescore,feedback)
-        return weatherFinal
+        if locword:      
+            idcity           = search(locword)
+            weather          = weatherMatch(idcity,dateword)
+            weather_result   = "Lieu : " + locword + "\n" + weather[0]
+            weather_request  = weather[1]
+            weatherFinal=(response,weather_request,weather_result,locword,locscore,dateword,datescore,feedback)
+            return weatherFinal
+        else : 
+            raise Exception("je n'ai pas compris votre demande veuillez réessayer")
     else:
         return None
