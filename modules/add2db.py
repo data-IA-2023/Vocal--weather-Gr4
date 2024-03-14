@@ -1,6 +1,7 @@
 from connect2db import *
 
 def add2db(weatherFinal):
+    """adds the information of weatherFinal to the database"""
     global conn
     def add2db_fct(weatherFinal):
         global conn

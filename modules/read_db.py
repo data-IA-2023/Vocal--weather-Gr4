@@ -4,6 +4,7 @@ import pandas as pd
 
 
 def read_db():
+    """reads the database and returns a pandas dataframe"""
     global conn
     def read_db_fct():
         global conn

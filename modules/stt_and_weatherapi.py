@@ -239,6 +239,7 @@ mois_fr = {
 
 ##### Process text sample (from wikipedia)
 def execute_cmd(audio):
+    """executes all the commands to do the stt and extract the features, returns a tuple with all the disired weather information"""
     global mois_fr      
     response = recognize_from_microphone(audio)
     tokenizer = AutoTokenizer.from_pretrained("Jean-Baptiste/camembert-ner-with-dates")

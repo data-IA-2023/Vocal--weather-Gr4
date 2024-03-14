@@ -5,6 +5,7 @@ geokey   = os.environ.get('GEOAPIKEY')
 
 
 def geocode_city(city_name):
+    """returns a coordinates tuple from city_name"""
     global geokey
     geocoder = OpenCageGeocode(geokey)
     data = geocoder.geocode(city_name)

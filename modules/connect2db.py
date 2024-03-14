@@ -23,6 +23,7 @@ connectionString = f"DRIVER={{ODBC Driver 18 for SQL Server}};SERVER={server};DA
 
 # Connect to the database
 def connect2db():
+    """connects to the database with global conn object"""
     global conn,connectionString
     try:
         conn = pyodbc.connect(connectionString)
