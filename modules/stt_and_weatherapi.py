@@ -63,6 +63,7 @@ def search(city):
 
 ################## current weather #########################
 def currentweather(id):
+    """This function takes a city ID as input and uses the weather API to retrieve the current weather data for that city. It parses the response to extract relevant information like temperature, chance of rain, wind speed, cloud cover, and formats the date and time in French according to the Paris time zone."""
     querystring = {"tempunit":"C","lang":"fr","tz":"Europe/Paris","dataset": 'full'}
     urlcurrent = f"https://foreca-weather.p.rapidapi.com/current/{id}"
     current = requests.get(urlcurrent, headers=headers, params=querystring)
@@ -94,6 +95,7 @@ def currentweather(id):
 
 ############## hourly weather ############################
 def hourlyWeather(id,hours):
+    """This function takes a city ID and the number of hours as input and uses the weather API to retrieve the hourly weather forecast for that city for the specified number of hours. It parses the response to extract relevant information and formats the date and time in French according to the Paris time zone."""
     querystring = {"tempunit":"C","lang":"fr","tz":"Europe/Paris","periods":str(hours),"dataset": 'full'}
     urlcurrent = f"https://foreca-weather.p.rapidapi.com/forecast/hourly/{id}"
     current = requests.get(urlcurrent, headers=headers, params=querystring)
@@ -125,6 +127,7 @@ def hourlyWeather(id,hours):
 
 ################# dat day weather ########################
 def datDayWeather(id,date):
+    """This function takes a city ID and a date as input and uses the weather API to retrieve the weather data for that specific date. It parses the response to extract relevant information and formats the date and time in French according to the Paris time zone."""
     match = False
     querystring = {"tempunit":"C","lang":"fr","tz":"Europe/Paris","periods":"15","dataset": 'full'}
     urlcurrent = f"https://foreca-weather.p.rapidapi.com/forecast/daily/{id}"
@@ -163,6 +166,7 @@ def datDayWeather(id,date):
 
     ############## daily weather ############################
 def dailyWeather(id,days):
+    """This function takes a city ID and the number of days as input and uses the weather API to retrieve the daily weather forecast for that city for the specified number of days. It parses the response to extract relevant information and formats the date and time in French according to the Paris time zone."""
     querystring = {"tempunit":"C","lang":"fr","tz":"Europe/Paris","periods":str(days),"dataset": 'full'}
     urlcurrent = f"https://foreca-weather.p.rapidapi.com/forecast/daily/{id}"
     current = requests.get(urlcurrent, headers=headers, params=querystring)
@@ -190,6 +194,7 @@ def dailyWeather(id,days):
     ######################### weatherMatch ########################
 
 def weatherMatch(id,data):
+    """This function takes a city ID and user text as input. It uses regular expressions to match weather-related keywords and phrases in the text and calls the appropriate weather function (currentweather, hourlyWeather, datDayWeather, or dailyWeather) based on the matched pattern. It also handles cases where the user specifies dates using expressions like "today," "tomorrow," or specific days of the week."""
     global mois_fr
     if re.search(r'demain', data.lower()):
                     dateWeather = 2
@@ -250,6 +255,7 @@ mois_fr = {
 
 ##### Process text sample (from wikipedia)
 def execute_cmd(audio):
+    """This is the endpoint function, it takes an audio filepath performs stt then ner and calls the foreca api to return the desired weather information."""
     global mois_fr      
     response = recognize_from_microphone(audio)
     tokenizer = AutoTokenizer.from_pretrained("Jean-Baptiste/camembert-ner-with-dates")
