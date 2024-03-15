@@ -19,7 +19,9 @@ def read_db():
         df['nlp_date'] = df['nlp_date'].astype("str")
         df['feedback'] = df['feedback'].astype("str")
         return df
-    try : return read_db_fct()
+    try :
+        r=read_db_fct()
+        return r
     except :
         connect2db()
         return read_db_fct()
